@@ -1,0 +1,17 @@
+services:
+  postgresdb:
+    image: postgres:17
+
+    ports:
+    - "5432:5432"  #Port Mapping
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRESDB: chaicode
+
+    volumes:
+     - 'postgres_data:/var/lib/postgressq;/data'
+    
+volumes:
+  postgres_data:    
