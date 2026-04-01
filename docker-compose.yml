@@ -8,10 +8,10 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRESDB: chaicode
+      POSTGRES_DB: chaicode
 
     volumes:
-     - 'postgres_data:/var/lib/postgressq;/data'
+     - 'postgres_data:/var/lib/postgresql/data'
     
 volumes:
   postgres_data:    
