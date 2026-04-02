@@ -1,5 +1,5 @@
 import type {Request,Response } from 'express'
-import { signupPayloadModel } from './models.js'
+import { signinPayloadModel, signupPayloadModel } from './models.js'
 
 import { db } from '../../db/index.js'
 import { usersTable } from '../../db/schema.js'
@@ -49,6 +49,27 @@ class AuthenticationController {
             data:{ id: result?.id } 
         })
 
+    }
+
+    public async handleSignin( req:Request, res:Response){
+      const validationResult  = await signinPayloadModel.safeParseAsync(req.body)
+      if(validationResult.error) return res.status(400).json({message:'Body Validation Failed', error: validationResult.error.issues});
+
+      const {email, password } = validationResult.data
+
+      const [userSelect] =await db.select().from(usersTable).where(eq(usersTable.email, email))
+      if(!userSelect) return res.status(404).json({message:`USer with Email ${email} does not exist`});
+
+      //if user exists, first match the hash with the user's existing salt 
+      const salt = userSelect.salt!
+      const hash = createHmac('sha256',salt).update(password).digest('hex')
+
+      if(userSelect.password !== hash) return res.status(400).json({message:`Email or Password is Incorrect`});
+
+      //if user is valid then make token
+        return res.json({message:'SignIn Successful', data:{ token:1 }})
+
+      
     }
 }
 

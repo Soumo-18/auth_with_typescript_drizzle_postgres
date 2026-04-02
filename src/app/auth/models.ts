@@ -53,6 +53,35 @@ export const signupPayloadModel= z.object({
 });  
 
 
+export const signinPayloadModel = z.object({
+    email:z.email({error:"Please Enter a valid Email address"}),
+
+    password:z.string()
+    .min(6,{error:'Password must be at least 6 characters long'})
+    .refine((val)=>val.split('').some(c=>isLetter(c) && c=== c.toUpperCase()),
+           {
+            error:'Password must contain at least one uppercase letter'
+           }
+    )
+    
+    .refine((val) => val.split('').some(c => isLetter(c) && c === c.toLowerCase()),
+            {
+                error:"Password must contain at least one lowercase letter"
+            }
+    )
+
+    .refine((val)=>val.split('').some(c=> c >= '0' && c <= '9'),
+            {
+                error:'Password must contain at least one number'
+            }    
+    )
+
+    .refine((val)=>val.split('').some(c => !isLetter(c) && !(c >='0' && c <='9')),
+            {
+                 error:'Password must contain at least one special character'
+            }
+    )
+})
 
 
 
@@ -68,6 +97,11 @@ export const signupPayloadModel= z.object({
 // export const signupPayloadModel = z.object({
 //     firstName:z.string().min(2),
 //     lastName:z.string().nullable().optional(),
+//     email:z.email(),
+//     password:z.string().min(6)
+// })
+
+// export const signinPayloadModel = z.object({
 //     email:z.email(),
 //     password:z.string().min(6)
 // })
