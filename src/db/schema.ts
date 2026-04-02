@@ -3,7 +3,7 @@ import { pgTable, uuid, varchar, boolean, text, timestamp} from 'drizzle-orm/pg-
 export const usersTable = pgTable('users', {
     id: uuid('id').primaryKey().defaultRandom(),
 
-    fistName:varchar('first_name', {length:50}).notNull(),
+    firstName:varchar('first_name', {length:50}).notNull(),
     lastName: varchar('last_name',{length:50}),       //can be not null
     
     email:varchar('email',{length:322 }).notNull().unique(),     //always keep length 320 but for safer length Buffer we toopk 322

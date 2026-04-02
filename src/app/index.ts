@@ -1,10 +1,12 @@
 import express from 'express'
 import type { Express } from 'express'
+import {authRouter} from './auth/routes.js'
 
 export function createApplication() : Express {
     const app = express()
 
     //Middlewares
+    app.use(express.json())
 
 
 
@@ -12,6 +14,8 @@ export function createApplication() : Express {
     app.get('/', (req,res) =>{
         return res.json({message:"Welcome to Chaicode Auth. Service"})
     })
+
+    app.use('/auth', authRouter)
 
     return app
 }
