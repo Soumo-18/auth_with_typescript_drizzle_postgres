@@ -96,20 +96,28 @@ import { signupPayloadModel , signinPayloadModel } from "./models.js";
 import { createUserToken, UserTokenPayload } from "./utils/token.js";
 import { generateSalt, hashPassword } from "./utils/hash.js";
 import { AuthService } from "./service.js";
-import { email } from "zod";
+import {ApiError} from './utils/ApiError.js'
+import { ApiResponse } from "./utils/ApiResponse.js";
 
 class AuthenticationController {
     
     public async handleSignup(req:Request,res:Response){
+        //applying dto validating the request body
         const validationResult = await signupPayloadModel.safeParseAsync(req.body)
+        //handling dto errors
         if(validationResult.error){
-            return res.status(400).json({message:'Body Validation Failed', error: validationResult.error.issues})
+            const err = ApiError.badRequst('Body Validation Failed',validationResult.error.issues)
+            return res.status(err.statusCode).json(err)
         }
-        const {firstName,lastName,email,password}=validationResult.data
+
+        const { firstName, lastName, email, password } = validationResult.data
+
         //checking for existing user via service
         const existingUser= await AuthService.getUserByEmail(email)
         if(existingUser) {
-            return res.status(400).json({error:'Duplicate Entry', message:`User with Email ${email} alreadys exists`})
+            //using conflict 409 because the resource already exists
+            const err = ApiError.conflict(`User with Email ${email} alreadys exists`)
+            return res.status(err.statusCode).json(err)
         }
         // Hash password via utility
         const salt = generateSalt()
@@ -123,33 +131,37 @@ class AuthenticationController {
             password:hashedPassword,
             salt,
         })
-        return res.status(201).json({
-            message:'User has been created successfully',
-            data:{ id: result?.id}
-        })
+        return ApiResponse.created(res, 'User has been created successfully', { id: result?.id})
     }
+
 public async handleSignin (req:Request,res:Response){
     const validatioResult = await signinPayloadModel.safeParseAsync(req.body)
     if(validatioResult.error) {
-        return res.status(400).json({message:'Body Validation Failed', error:validatioResult.error.issues})
+        const err = ApiError.badRequst('Body Validation Failed', validatioResult.error.issues)
+        return res.status(err.statusCode).json(err)
     }
+
     const {email, password} = validatioResult.data
 
     //Fetch user via service
     const user = await AuthService.getUserByEmail(email)
     if(!user){
-        return res.status(404).json({message:`User with Email ${email} does not exists`})
+        const err = ApiError.notFound(`User with Email ${email} does not exists`)
+        return res.status(err.statusCode).json(err)
     }
 
     //verify password via utility 
     const hashedInput = hashPassword(password, user.salt!)
     if(user.password !== hashedInput) {
-        return res.status(400).json({message:'Email or Password is Incorrect'})    
+        //using unauthorized 401 for incorrect credentials
+        const err = ApiError.unauthorized('Email or Password is Incorrect')
+        return res.status(err.statusCode).json()    
     }
 
     //generate token
     const token = createUserToken({ id: user.id})
-    return res.json({ message:'Signin Successful', data:{token} })
+
+    return ApiResponse.ok(res, 'Signin Successful', {token})
     
 }
 
@@ -159,13 +171,14 @@ public async handleMe (req:Request, res:Response){
     //fetch user via service
     const user = await AuthService.getUserById(id)
     if(!user){
-        return res.status(404).json({message:'User Not Found'})
+        const err = ApiError.notFound('User Not Found')
+        return res.status(err.statusCode).json(err)
     }
 
-    return res.json({
-        firstName:user.firstName,
-        lastName: user.lastName,
-        email: user.email,
+    return ApiResponse.ok(res, 'Profile Fetched Successfully', {
+        firstName: user.firstName,
+        lastName:user.lastName,
+        email:user.email,
     })
 }
 

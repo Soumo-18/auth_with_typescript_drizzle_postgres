@@ -7,7 +7,32 @@ const isValidName=(val:string)=>{
     return val.split('').every(char=>isLetter(char) || char===' ' || char==='-');
 
 };
+//to reuse password schema(dry)
+const passwordSchema = z.string()
+    .min(6, {error: 'Password must be at least 6 characters long'})
+    .refine((val) => val.split('').some(c=> isLetter(c) && c === c.toLowerCase()),
+        {
+            error :'Password must contain at least one uppercase letter'
+        })
 
+    .refine((val) => val.split('').some(c => isLetter(c) && c === c.toLowerCase()),
+            {
+                error:"Password must contain at least one lowercase letter"
+            }
+    )
+
+    .refine((val)=>val.split('').some(c=> c >= '0' && c <= '9'),
+            {
+                error:'Password must contain at least one number'
+            }    
+    )
+
+    .refine((val)=>val.split('').some(c => !isLetter(c) && !(c >='0' && c <='9')),
+            {
+                 error:'Password must contain at least one special character'
+            }
+    )
+        
 //refine method allows to write custom validation logic using standard Js functions.
 //We can chain multiple refine() checks together and give the user a 
 // specific error message for exactly what they missed
@@ -22,33 +47,9 @@ export const signupPayloadModel= z.object({
     .nullable()
     .optional(),
 
-    email:z.email({error:"Please Enter a valid Email address"}),
+    email: z.email({error:"Please Enter a valid Email address"}),
 
-    password:z.string()
-    .min(6,{error:'Password must be at least 6 characters long'})
-    .refine((val)=>val.split('').some(c=>isLetter(c) && c=== c.toUpperCase()),
-           {
-            error:'Password must contain at least one uppercase letter'
-           }
-    )
-    
-    .refine((val) => val.split('').some(c => isLetter(c) && c === c.toLowerCase()),
-            {
-                error:"Password must contain at least one lowercase letter"
-            }
-    )
-
-    .refine((val)=>val.split('').some(c=> c >= '0' && c <= '9'),
-            {
-                error:'Password must contain at least one number'
-            }    
-    )
-
-    .refine((val)=>val.split('').some(c => !isLetter(c) && !(c >='0' && c <='9')),
-            {
-                 error:'Password must contain at least one special character'
-            }
-    )
+    password: passwordSchema
 
 });  
 
@@ -56,31 +57,7 @@ export const signupPayloadModel= z.object({
 export const signinPayloadModel = z.object({
     email:z.email({error:"Please Enter a valid Email address"}),
 
-    password:z.string()
-    .min(6,{error:'Password must be at least 6 characters long'})
-    .refine((val)=>val.split('').some(c=>isLetter(c) && c=== c.toUpperCase()),
-           {
-            error:'Password must contain at least one uppercase letter'
-           }
-    )
-    
-    .refine((val) => val.split('').some(c => isLetter(c) && c === c.toLowerCase()),
-            {
-                error:"Password must contain at least one lowercase letter"
-            }
-    )
-
-    .refine((val)=>val.split('').some(c=> c >= '0' && c <= '9'),
-            {
-                error:'Password must contain at least one number'
-            }    
-    )
-
-    .refine((val)=>val.split('').some(c => !isLetter(c) && !(c >='0' && c <='9')),
-            {
-                 error:'Password must contain at least one special character'
-            }
-    )
+    password: passwordSchema
 })
 
 
